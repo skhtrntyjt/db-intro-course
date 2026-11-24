@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model appointments {
+  appointment_id   Int          @id @default(autoincrement())
+  patient_id       Int
+  doctor_id        Int
+  appointment_date DateTime     @db.Timestamp(6)
+  appointment_end  DateTime     @db.Timestamp(6)
+  diagnosis        String?
+  status           String       @db.VarChar(50)
+  doctors          doctors      @relation(fields: [doctor_id], references: [doctor_id], onDelete: NoAction, onUpdate: NoAction)
+  patients         patients     @relation(fields: [patient_id], references: [patient_id], onDelete: NoAction, onUpdate: NoAction)
+  treatments       treatments[]
+
+  @@unique([doctor_id, appointment_date])
+  @@unique([patient_id, appointment_date])
+}
+
+model departments {
+  department_id      Int                  @id @default(autoincrement())
+  name               String               @unique @db.VarChar(100)
+  building           String               @db.VarChar(200)
+  floor              Int
+  doctor_departments doctor_departments[]
+}
+
+model doctor_departments {
+  doctor_id     Int
+  department_id Int
+  departments   departments @relation(fields: [department_id], references: [department_id], onDelete: NoAction, onUpdate: NoAction)
+  doctors       doctors     @relation(fields: [doctor_id], references: [doctor_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([doctor_id, department_id])
+}
+
+model doctors {
+  doctor_id          Int                  @id @default(autoincrement())
+  first_name         String               @db.VarChar(100)
+  last_name          String               @db.VarChar(100)
+  specialization     String               @db.VarChar(200)
+  phone              String               @unique @db.VarChar(20)
+  appointments       appointments[]
+  doctor_departments doctor_departments[]
+}
+
+model patients {
+  patient_id    Int            @id @default(autoincrement())
+  first_name    String         @db.VarChar(100)
+  last_name     String         @db.VarChar(100)
+  date_of_birth DateTime       @db.Date
+  phone         String         @unique @db.VarChar(20)
+  email         String         @unique @db.VarChar(100)
+  appointments  appointments[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model treatments {
+  treatment_id   Int          @id @default(autoincrement())
+  appointment_id Int
+  type           String       @db.VarChar(100)
+  details        String?
+  status         String       @db.VarChar(50)
+  appointments   appointments @relation(fields: [appointment_id], references: [appointment_id], onDelete: NoAction, onUpdate: NoAction)
+}
